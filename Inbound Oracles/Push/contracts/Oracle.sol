@@ -18,14 +18,14 @@ contract Oracle {
         admin = msg.sender;
     }
 
-    function updateReporter(address reporterAddress, bool isReporter) public {
+    function updateReporter(address reporterAddress, bool isReporter) external {
         if (msg.sender != admin) {
             revert OnlyAdmin();
         }
         reporters[reporterAddress] = isReporter;
     }
 
-    function updateData(bytes32 key, uint payload) public {
+    function updateData(bytes32 key, uint payload) external {
         if (!_hasReporter(msg.sender)) {
             revert OnlyReporter();
         }

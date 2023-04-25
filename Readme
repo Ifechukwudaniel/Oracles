@@ -1,9 +1,0 @@
-# Ethereum Oracles
-
-Welcome to the Ethereum Oracles project! In this project, we will be exploring different types of Ethereum oracles, including inbound, outbound, consensus, and tokenization oracles. We will provide detailed code examples and simple projects to demonstrate how each type of oracle works.
-
-Each folder in this project contains a readme that explains the different types of oracles and provides code examples for each type.
-
-For flexibility, we will be using a range of tools, including Next, React, Vite, Foundry, Hardhat, Truffle, and Scaffold Eth 2. Our goal is to expose readers to as many development tools as possible and to show that the framework is just a tool - nothing more.
-
-Thank you for joining us on this journey!

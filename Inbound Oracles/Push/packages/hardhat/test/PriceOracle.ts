@@ -50,7 +50,8 @@ describe("PriceOracle", function () {
       await priceOracle.connect(owner).updateReporter(reporter1.address, true);
       await priceOracle.connect(reporter1).updateData(key, amount);
       const [found, date, payload] = await priceOracle.getData(key);
-      await ethers.provider.send("evm_mine", [date.toNumber() + 60]);
+      await ethers.provider.send("evm_increaseTime", [120]);
+      await ethers.provider.send("evm_mine", []);
       const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
       expect(date.toNumber()).to.lessThan(timeStamp);
       expect(found).to.equal(true);
@@ -60,7 +61,10 @@ describe("PriceOracle", function () {
     it("Non Reporters should not be able to update data ", async () => {
       const key = ethers.utils.formatBytes32String("BTC/UST");
       const value = 1000;
-      await expect(priceOracle.connect(reporter2).updateData(key, value)).to.be.revertedWithCustomError(priceOracle,"OnlyReporter");
+      await expect(priceOracle.connect(reporter2).updateData(key, value)).to.be.revertedWithCustomError(
+        priceOracle,
+        "OnlyReporter",
+      );
     });
   });
 });

@@ -12,7 +12,7 @@ contract PriceOracle is Ownable, IOracle {
 
   struct Data {
     uint date;
-    uint256 payload;
+    uint payload;
   }
 
   function updateReporter(address reporterAddress, bool isReporter) external onlyOwner {
@@ -30,7 +30,7 @@ contract PriceOracle is Ownable, IOracle {
     data[key] = Data(block.timestamp, payload);
   }
 
-  function getData(bytes32 key) external view returns (bool results, uint date, uint256 payload) {
+  function getData(bytes32 key) external view returns (bool results, uint date, uint payload) {
     if (data[key].date == 0) {
       return (false, 0, 0);
     }

@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 
-const deployPriceOracle: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployPriceConsumer: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -16,27 +15,17 @@ const deployPriceOracle: DeployFunction = async function (hre: HardhatRuntimeEnv
   */
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-  const [_, addr1] = await ethers.getSigners();
+  const oracle = await ethers.getContract("PriceOracle", deployer);
 
-  await deploy("PriceOracle", {
+  await deploy("PriceConsumer", {
     from: deployer,
-    args: [],
+    args: [oracle.address],
     log: true,
   });
-
-  const priceOracle = await hre.ethers.getContract("PriceOracle", deployer);
-
-  // Add  a default reporter for the ui
-  // await priceOracle.updateReporter("0xCbdAa684708c13E7b85EBe3d3410DF02F8700808", true);
-
-  // other reporters
-  await priceOracle.updateReporter(deployer, true);
-  await priceOracle.updateReporter(addr1.address, true);
-  // await priceOracle.transferOwnership("0xCbdAa684708c13E7b85EBe3d3410DF02F8700808");
 };
 
-export default deployPriceOracle;
+export default deployPriceConsumer;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags YourContract
-deployPriceOracle.tags = ["PriceOracle"];
+deployPriceConsumer.tags = ["PriceConsumer"];

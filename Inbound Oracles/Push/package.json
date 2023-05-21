@@ -31,11 +31,9 @@
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
-    "@types/coingecko-api": "^1.0.10",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3"
   },
   "dependencies": {
-    "coingecko-api": "^1.0.10"
   }
 }

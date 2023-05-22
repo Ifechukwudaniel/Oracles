@@ -47,9 +47,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.3",
+    "coingecko-api": "^1.0.10",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
-    "qrcode": "^1.5.1",
-    "coingecko-api": "^1.0.10"
+    "qrcode": "^1.5.1"
   }
 }

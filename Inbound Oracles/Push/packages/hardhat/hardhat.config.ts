@@ -1,8 +1,11 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
+import CoinGecko from "coingecko-api";
+import * as fs from "fs";
+import { PriceOracle } from "./typechain-types";
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
@@ -76,3 +79,76 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+
+async function getPricesAndTickers() {
+  const CoinGeckoClient = new CoinGecko();
+
+  const coinList = [
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "bitcoin-cash",
+    "cardano",
+    "monero",
+    "polkadot",
+    "dogecoin",
+    "dash",
+    "tron",
+  ];
+  const responses = coinList.map(coin => CoinGeckoClient.coins.fetch(coin, {}));
+  const priceAndSymbol = await Promise.all(responses).then(response => {
+    return response.map(({ success, data }) => {
+      if (success) {
+        const ticker = data.symbol.toUpperCase().concat("/USD");
+        const currentPrice = parseFloat(`${data.market_data.current_price.usd}`);
+        const price = parseInt(`${currentPrice * 10000}`);
+        return { ticker, price };
+      }
+    });
+  });
+
+  return priceAndSymbol;
+}
+
+const DEBUG = true;
+
+function debug(text: string) {
+  if (DEBUG) {
+    console.log(text);
+  }
+}
+
+task("watchPrice", "Watches and update the prices on the price oracle").setAction(
+  async (taskArgs, { network, ethers }) => {
+    const TARGET_FILE = `./deployments/${network.name}/PriceOracle.json`;
+    if (!fs.existsSync(TARGET_FILE)) {
+      debug(`Please deploy Price Oracle Contract on ${network.name} network `);
+      return;
+    }
+
+    const priceOracleAbiString = fs.readFileSync(TARGET_FILE, { encoding: "utf8", flag: "r" });
+    const priceOracleAbi = JSON.parse(priceOracleAbiString);
+
+    const priceOracleFactory = await ethers.getContractFactory("PriceOracle");
+    const priceOracle = (await priceOracleFactory.attach(priceOracleAbi.address)) as PriceOracle;
+
+    const [, reporter1] = await ethers.getSigners();
+    // const key = "BTC/UST");
+    // const amount = 10000;
+
+    const POOL_INTERVAL = 120000;
+
+    while (true) {
+      const pricesAndTickers = await getPricesAndTickers();
+      for (let i = 0; i < pricesAndTickers.length; i++) {
+        if (pricesAndTickers[i]?.ticker === undefined || pricesAndTickers[i]?.price === undefined) continue;
+        const key = ethers.utils.formatBytes32String(pricesAndTickers[i]?.ticker || "");
+        const amount = pricesAndTickers[i]?.price || 0;
+        console.log(`Updating ${pricesAndTickers[i]?.ticker} price to ${pricesAndTickers[i]?.price}`);
+        await priceOracle.connect(reporter1).updateData(key, amount);
+        await new Promise(resolve => setTimeout(resolve, 4000));
+      }
+      await new Promise(resolve => setTimeout(resolve, POOL_INTERVAL));
+    }
+  },
+);

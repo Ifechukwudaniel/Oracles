@@ -9,6 +9,8 @@ describe("PriceOracle", function () {
   let owner: any;
   let reporter1: any;
   let reporter2: any;
+  const key = ethers.utils.formatBytes32String("BTC/UST");
+  const amount = 1000;
 
   before(async () => {
     [owner, reporter1, reporter2] = await ethers.getSigners();
@@ -37,7 +39,6 @@ describe("PriceOracle", function () {
 
   describe("Oracle Data", () => {
     it("Data should be empty if data has not been updated ", async () => {
-      const key = ethers.utils.formatBytes32String("BTC/UST");
       const [found, date, payload] = await priceOracle.getData(key);
       expect(found).to.equal(false);
       expect(date.toNumber()).to.equal(0);
@@ -45,8 +46,6 @@ describe("PriceOracle", function () {
     });
 
     it("Reporter should be able to update data", async () => {
-      const key = ethers.utils.formatBytes32String("BTC/UST");
-      const amount = 1000;
       await priceOracle.connect(owner).updateReporter(reporter1.address, true);
       await priceOracle.connect(reporter1).updateData(key, amount);
       const [found, date, payload] = await priceOracle.getData(key);
@@ -58,10 +57,15 @@ describe("PriceOracle", function () {
       expect(payload).to.equal(amount);
     });
 
+    it("should fire priceUpdate event when price is updated", async () => {
+      await priceOracle.connect(owner).updateReporter(reporter1.address, true);
+      await expect(priceOracle.connect(reporter1).updateData(key, amount))
+        .to.emit(priceOracle, "PriceUpdate")
+        .withArgs(key, reporter1.address, amount);
+    });
+
     it("Non Reporters should not be able to update data ", async () => {
-      const key = ethers.utils.formatBytes32String("BTC/UST");
-      const value = 1000;
-      await expect(priceOracle.connect(reporter2).updateData(key, value)).to.be.revertedWithCustomError(
+      await expect(priceOracle.connect(reporter2).updateData(key, amount)).to.be.revertedWithCustomError(
         priceOracle,
         "OnlyReporter",
       );

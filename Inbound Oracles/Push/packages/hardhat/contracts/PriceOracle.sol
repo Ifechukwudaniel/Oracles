@@ -10,6 +10,8 @@ contract PriceOracle is Ownable, IOracle {
   mapping(address => bool) reporters;
   mapping(bytes32 => Data) data;
 
+  event PriceUpdate(bytes32 indexed ticker, address indexed reporter, uint payload);
+
   struct Data {
     uint date;
     uint payload;
@@ -28,6 +30,7 @@ contract PriceOracle is Ownable, IOracle {
       revert OnlyReporter();
     }
     data[key] = Data(block.timestamp, payload);
+    emit PriceUpdate(key, msg.sender, payload);
   }
 
   function getData(bytes32 key) external view returns (bool results, uint date, uint payload) {

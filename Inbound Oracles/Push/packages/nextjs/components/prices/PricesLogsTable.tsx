@@ -1,5 +1,5 @@
 import React from "react";
-import PriceChange from "~~/types/prices/priceChange";
+import { PriceChange } from "~~/types/prices";
 
 export default function PricesLogsTable({
   title,

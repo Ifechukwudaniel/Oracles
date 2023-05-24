@@ -5,7 +5,7 @@ import type { NextPage } from "next";
 import { useContractEvent } from "wagmi";
 import PricesLogsTable from "~~/components/prices/PricesLogsTable";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
-import PriceChange from "~~/types/prices/priceChange";
+import { PriceChange } from "~~/types/prices";
 
 const PriceUpdates: NextPage = () => {
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo("PriceOracle");

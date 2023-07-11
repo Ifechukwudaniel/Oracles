@@ -18,6 +18,8 @@ contract HttpRequestConsumer is RequestConsumer {
     httpOracle = HttpRequestOracle(_oracle);
   }
 
+function test() public returns(address){}
+:q
   function requestPriceData() public returns (bytes32) {
     RequestLib.Request memory req = buildRequest(this._requestedDataCompleted.selector);
     req.setId(keccak256(abi.encodePacked(block.timestamp, msg.sender)));

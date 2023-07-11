@@ -28,6 +28,7 @@ contract HttpRequestOracle is Ownable {
   }
 
   function sendRequest(RequestLib.Request memory req) external returns (bytes32) {
+    require( req.id , "HttpRequestOracle: ")
     bytes memory encodedRequest = abi.encodeWithSelector(
       this.updateReporter.selector,
       req.id,

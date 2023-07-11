@@ -1,8 +1,10 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
+import * as fs from "fs";
+import { HttpRequestOracle } from "./typechain-types";
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
@@ -76,3 +78,55 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+
+const DEBUG = true;
+
+function debug(text: string) {
+  if (DEBUG) {
+    console.log(text);
+  }
+}
+
+task("watchEvents", "Watches and update the callback function base on the event call").setAction(
+  async (taskArgs, { network, ethers }) => {
+    const TARGET_FILE = `./deployments/${network.name}/HttpRequestOracle.sol.json`;
+    if (!fs.existsSync(TARGET_FILE)) {
+      debug(`Please deploy Price Oracle Contract on ${network.name} network `);
+      return;
+    }
+
+    const httpRequestOracleAbiString = fs.readFileSync(TARGET_FILE, { encoding: "utf8", flag: "r" });
+    const httpRequestOracleAbi = JSON.parse(httpRequestOracleAbiString);
+
+    // Create a contract instance
+    const httpRequestOracleFactory = await ethers.getContractFactory("HttpRequestOracle");
+    const httpRequestOracle = (await httpRequestOracleFactory.attach(
+      httpRequestOracleAbi.address,
+    )) as HttpRequestOracle;
+
+    // Monitor Event
+    httpRequestOracle.on("RequestSent", (id, data) => {
+      console.log(id, data);
+    });
+
+    // const [, reporter1] = await ethers.getSigners();
+
+    // const key = "BTC/UST");
+    // const amount = 10000;
+
+    // const POOL_INTERVAL = 120000;
+
+    // while (true) {
+    //   const pricesAndTickers = await getPricesAndTickers();
+    //   for (let i = 0; i < pricesAndTickers.length; i++) {
+    //     if (pricesAndTickers[i]?.ticker === undefined || pricesAndTickers[i]?.price === undefined) continue;
+    //     const key = ethers.utils.formatBytes32String(pricesAndTickers[i]?.ticker || "");
+    //     const amount = pricesAndTickers[i]?.price || 0;
+    //     console.log(`Updating ${pricesAndTickers[i]?.ticker} price to ${pricesAndTickers[i]?.price}`);
+    //     await priceOracle.connect(reporter1).updateData(key, amount);
+    //     await new Promise(resolve => setTimeout(resolve, 4000));
+    //   }
+    //   await new Promise(resolve => setTimeout(resolve, POOL_INTERVAL));
+    // }
+  },
+);

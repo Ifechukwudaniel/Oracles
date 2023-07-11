@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "account": "hardhat run scripts/listAccount.ts",
-    "watch-prices": "hardhat run watchPrices ",
+    "watch-prices": "yarn hardhat watchPrice",
     "chain": "hardhat node --network hardhat --no-deploy",
     "compile": "hardhat compile",
     "deploy": "hardhat deploy --export-all ./temp/hardhat_contracts.json \"$@\" && hardhat run scripts/generateTsAbis.ts",

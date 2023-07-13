@@ -72,7 +72,7 @@ This demonstration is purely for illustrative purposes and is not intended for d
 
 ![Diagram](https://github.com/Ifechukwudaniel/Oracles/assets/47566579/01617caf-887e-433d-a9a5-8c79dd317197)
 
-In essence, there are nodes that report the latest price of each of the following assets in USD:
+In essence, there are nodes that report the latest price of each of the following assets in USD . The node is simulated by  yarn run watch-prices command :
 ```
 [
     "bitcoin",

@@ -1,7 +1,6 @@
-# 🏗 Push Oracle Demo
+#  Push Oracle Demo
 
-This is a simple tutorial that explains a push oracle this demo is made with scaffold eth 2.
-So we recommend that you are a bit familiar with scaffold eth 2 and solidity
+This is a straightforward guide that provides an explanation of a push oracle, utilizing Scaffold-Eth 2 for demonstration purposes. It's advisable that you have some familiarity with Scaffold-Eth 2 and Solidity to fully benefit from this tutorial.
 
 ## Requirements
 
@@ -42,74 +41,88 @@ This command deploys a test smart contract to the local network. The contract is
 4. On a third terminal, start your NextJS app:
 
 ```
+cd Inbound-Oracles/Push/packages/nextjs
 yarn start
 ```
+This command starts the next js app on Visit your app on: `http://localhost:3000 `.There are two pages you need to know about, the first page explains the demo while the second page is a table that shows price updates, the price table is empty because the Oracle node is not running 
+ 
+<img width="1440" alt="Screenshot 2023-07-13 at 3 36 53 PM" src="https://github.com/Ifechukwudaniel/Oracles/assets/47566579/116644f2-77f0-40d0-9182-f05cefcb7310">
 
-5. On the fourth terminal run the Simulation of nodes updating the prices of different Token :
+<img width="1440" alt="Screenshot 2023-07-13 at 3 36 10 PM" src="https://github.com/Ifechukwudaniel/Oracles/assets/47566579/0d2fe56d-36e8-47d0-87bf-7ae7f9df3b49">
 
-```
-yarn start
-```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the contract component or the example ui in the frontend. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
-
-Run smart contract test with `yarn hardhat:test`
-
-- Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
-- Edit your frontend in `packages/nextjs/pages`
-- Edit your deployment scripts in `packages/hardhat/deploy`
-
-## Deploying your Smart Contracts to a Live Network
-
-Once you are ready to deploy your smart contracts, there are a few things you need to adjust.
-
-1. Select the network
-
-By default, `yarn deploy` will deploy the contract to the local network. You can change the defaultNetwork in `packages/hardhat/hardhat.config.ts.` You could also simply run `yarn deploy --network target_network` to deploy to another network.
-
-Check the `hardhat.config.ts` for the networks that are pre-configured. You can also add other network settings to the `hardhat.config.ts file`. Here are the [Alchemy docs](https://docs.alchemy.com/docs/how-to-add-alchemy-rpc-endpoints-to-metamask) for information on specific networks.
-
-Example: To deploy the contract to the Sepolia network, run the command below:
+5. On the fifth terminal run the Simulation of nodes updating the prices of different Token  on the price oracle contract:
 
 ```
-yarn deploy --network sepolia
+cd Inbound-Oracles/Push/packages/hardhat
+yarn run watch-prices 
+```
+By executing the subsequent command, you initiate the script that refreshes the Oracle contract's state and the user interface. The value of each asset will be refreshed every 2 seconds to maintain the most recent token price.
+
+<img width="673" alt="Screenshot 2023-07-13 at 4 05 23 PM 1" src="https://github.com/Ifechukwudaniel/Oracles/assets/47566579/63c872a6-6737-4e1c-8fba-4d6fb6504e67">
+
+<img width="1440" alt="Screenshot 2023-07-13 at 4 06 43 PM" src="https://github.com/Ifechukwudaniel/Oracles/assets/47566579/394379db-36ff-4ea3-87e9-359f36930c92">
+
+
+## Note 
+This demonstration is purely for illustrative purposes and is not intended for deployment on the mainnet.
+
+
+## How it Works 
+
+![Diagram](https://github.com/Ifechukwudaniel/Oracles/assets/47566579/01617caf-887e-433d-a9a5-8c79dd317197)
+
+In essence, there are nodes that report the latest price of each of the following assets in USD:
+```
+[
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "bitcoin-cash",
+    "cardano",
+    "monero",
+    "polkadot",
+    "dogecoin",
+    "dash",
+    "tron",
+  ];
+```
+And then it calls updateData  in the PriceOracle.sol Contract 
+
+ ```
+  function updateData(bytes32 key, uint payload) external {
+    if (!_hasReporter(msg.sender)) {
+      revert OnlyReporter();
+    }
+    data[key] = Data(block.timestamp, payload);
+    emit PriceUpdate(key, msg.sender, payload);
+  }
+ ```
+The token's id is the Byte32 hash of the token symbol, which is the key, and the payload is the price.
+
+
+ ```
+
+contract PriceConsumer {
+  IOracle public priceOracle;
+
+  constructor(address _oracle) {
+    priceOracle = IOracle(_oracle);
+  }
+
+  function getPrice(bytes32 ticker) external view returns (uint) {
+    (bool found, uint timestamp, uint price) = priceOracle.getData(ticker);
+    if (!found) {
+      revert CouldNotGetPrice();
+    }
+    if (block.timestamp - timestamp >= 3 minutes) {
+      revert StalePrice();
+    }
+    return price;
+  }
+}
+
 ```
 
-2. Generate a new account or add one to deploy the contract(s) from. Additionally you will need to add your Alchemy API key. Rename `.env.example` to `.env` and fill the required keys.
+`priceOracle.getData(ticker)` gets the data  where the ticker is the bytes32 hash of 'BTC/USD'
 
-```
-ALCHEMY_API_KEY="",
-DEPLOYER_PRIVATE_KEY=""
-```
-
-The deployer account is the account that will deploy your contracts. Additionally, the deployer account will be used to execute any function calls that are part of your deployment script.
-
-You can generate a random account / private key with `yarn generate` or add the private key of your crypto wallet. `yarn generate` will create a random account and add the DEPLOYER_PRIVATE_KEY to the .env file. You can check the generated account with `yarn account`.
-
-3. Deploy your smart contract(s)
-
-Run the command below to deploy the smart contract to the target network. Make sure to have some funds in your deployer account to pay for the transaction.
-
-```
-yarn deploy --network network_name
-```
-
-4. Verify your smart contract
-
-You can verify your smart contract on Etherscan by running:
-
-```
-yarn verify --network network_name
-```
-
-## Deploying your NextJS App
-
-**Hint**: We recommend connecting your GitHub repo to Vercel (through the Vercel UI) so it gets automatically deployed when pushing to `main`.
-
-If you want to deploy directly from the CLI, run `yarn vercel` and follow the steps to deploy to Vercel. Once you log in (email, github, etc), the default options should work. It'll give you a public URL.
-
-If you want to redeploy to the same production URL you can run `yarn vercel --prod`. If you omit the `--prod` flag it will deploy it to a preview/test URL.
-
-**Make sure your `packages/nextjs/scaffold.config.ts` file has the values you need.**
-
-## Interacting with your Smart Contracts: SE-2 Custom Hooks
